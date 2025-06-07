@@ -1,0 +1,16 @@
+Escreva um programa que leia um grafo da entrada padrão e identifique se
+a conexidade de vértices do grafo é zero, um, dois ou pelo menos 3.
+
+Caso a conexidade seja zero, seu programa deve imprimir "Grafo desconexo."
+em uma única linha.
+
+Caso a conexidade seja 1, seu programa dever imprimir "Grafo 1-conexo."
+em uma linha e em seguida imprimir cada vértice de corte do grafo em uma
+linha separada, em ordem lexicográfica.
+
+Caso a conexidade seja 2, seu programa dever imprimir "Grafo 2-conexo."
+em uma linha e em seguida imprimir cada par de vértices de corte do grafo em uma
+linha separada, em ordem lexicográfica, sem repetir pares.
+
+Caso a conexidade pelo menos 3, seu programa dever imprimir "Grafo 3-conexo."
+em uma única linha.
