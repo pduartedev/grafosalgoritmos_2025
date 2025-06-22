@@ -1,0 +1,26 @@
+Escreva um programa que faça o seguinte:
+- leia um grafo orientado G com pesos w inteiros (positivos, nulos ou negativos) nos arcos (arestas orientadas)
+- decida (G,w) tem ciclo negativo e imprima tal ciclo caso ele exista
+- caso ele não tenha ciclo negativo, calcule os custos mínimos de caminhos entre todos os pares de vértices
+- caso ele não tenha ciclo negativo, imprima a matriz completa com os custos mínimos de caminhos entre todos os pares de vértices.
+
+A entrada de um grafo começa com uma linha com 2 inteiros n, m, sendo
+n o número de vértices do grafo e m o número de arestas do grafo, sendo
+(1<= n <= 1000 e 1<=m<=4000). Os
+nomes dos vértices do grafo serão os inteiros {0,1,2,...,n-1}. Em seguida
+são dadas m triplas de inteiros representando os arcos do grafo com seus pesos.
+Cada arcos é representado por uma tripla "u v c", representando um arco do
+vértice u para o vértice v com custo c. Temos que 0<= u,v <= n-1 e que
+-10000 <= c <= 10000. 
+
+Caso o grafo com pesos dado na entrada tenha um ciclo negativo, seu programa
+deve imprimir uma linha contendo a frase "Ciclo negativo detectado" seguido de
+uma linha contendo os vértices do ciclo em uma ordem de percurso do ciclo.
+Qualquer ciclo negativo e qualquer ordem de percurso dos vértices de tal ciclo
+são válidos. 
+
+Caso o grafo não tenha ciclos negativos, seu programa deve imprimir n linhas
+cada uma contendo n elementos, onde um elemento na j-ésimo posição da i-ésima linha 
+será igual ao custo mínimo de um caminho do vértice i para o vértice j, caso tal
+caminho exista. Caso não exista tal caminho, a letra 'X' deve ser impressa na j-ésima 
+posição da i-ésima linha.
