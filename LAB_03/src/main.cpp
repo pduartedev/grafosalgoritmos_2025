@@ -1,10 +1,9 @@
+#include "GraphAStar.hpp"
+#include "PuzzleGraph.hpp"
 #include <iostream>
 #include <vector>
 #include <fstream>
 #include <sstream>
-
-#include "AStar.hpp"
-#include "Puzzle.hpp"
 
 using namespace std;
 
@@ -49,13 +48,13 @@ vector<int> readInputFromFile(const string& filename) {
     return input;
 }
 
-void printSolution(const vector<Puzzle>& solution) {
+void printSolution(const vector<GraphNode>& solution) {
     if (solution.empty()) {
         cout << "Não foi possível encontrar uma solução." << endl;
         return;
     }
     
-    // Imprime o número de passos (número de estados - 1)
+    // Imprime o número de passos (número de vértices - 1)
     int steps = solution.size() - 1;
     cout << steps << endl << endl;
     
@@ -66,6 +65,22 @@ void printSolution(const vector<Puzzle>& solution) {
             cout << endl;
         }
     }
+}
+
+void printPuzzleAsGraph(const GraphNode& initial) {
+    cout << "=== Modelagem do Problema como Grafo ===" << endl;
+    cout << "• Cada VÉRTICE representa uma configuração do puzzle" << endl;
+    cout << "• Cada ARESTA representa um movimento válido (custo = 1)" << endl;
+    cout << "• O problema é encontrar o menor caminho no grafo de estados" << endl;
+    cout << "• Algoritmo: A* com heurística de Manhattan" << endl;
+    cout << "• Representação: Lista de Adjacências (gerada dinamicamente)" << endl;
+    cout << endl;
+    
+    cout << "Vértice inicial (configuração): " << endl;
+    initial.print();
+    cout << "ID do vértice: " << initial.getId() << endl;
+    cout << "Heurística (distância ao objetivo): " << initial.calculateManhattanDistance() << endl;
+    cout << endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -85,17 +100,25 @@ int main(int argc, char* argv[]) {
             return 1;
         }
         
-        // Cria o puzzle inicial
-        Puzzle initialPuzzle(input);
+        // Cria o nó inicial do grafo
+        GraphNode initialNode(input);
         
-        // Cria o solver A*
-        AStar solver;
+        // Mostra como o problema é modelado como grafo
+        printPuzzleAsGraph(initialNode);
         
-        // Resolve o puzzle
-        vector<Puzzle> solution = solver.solve(initialPuzzle);
+        // Cria o solver A* orientado a grafos
+        GraphAStar solver;
+        
+        // Resolve o puzzle usando busca no grafo
+        vector<GraphNode> solution = solver.solve(initialNode);
         
         // Imprime as estatísticas na saída de erro
         solver.printStatistics();
+        
+        // Imprime informações do grafo construído
+        cout << endl;
+        solver.getGraph().printGraphInfo();
+        cout << endl;
         
         // Imprime a solução na saída padrão
         printSolution(solution);
