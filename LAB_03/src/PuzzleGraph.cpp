@@ -111,12 +111,13 @@ bool GraphNode::isSolvable() const {
         // Para puzzle de tamanho ímpar (3x3), número de inversões deve ser par
         return inversions % 2 == 0;
     } else {
-        // Para puzzle de tamanho par (4x4)
-        if ((size - blankRow) % 2 == 1) {
-            // Espaço vazio em linha ímpar (contando de baixo)
+        // Para puzzle de tamanho par (4x4) - 15-puzzle
+        int blankRowFromBottom = size - blankRow;
+        if (blankRowFromBottom % 2 == 1) {
+            // Espaço vazio em linha ímpar (contando de baixo) - inversions deve ser par
             return inversions % 2 == 0;
         } else {
-            // Espaço vazio em linha par (contando de baixo)
+            // Espaço vazio em linha par (contando de baixo) - inversions deve ser ímpar
             return inversions % 2 == 1;
         }
     }
@@ -148,7 +149,88 @@ int GraphNode::calculateManhattanDistance() const {
 int GraphNode::calculateAdvancedHeuristic() const {
     int manhattan = calculateManhattanDistance();
     int linearConflicts = calculateLinearConflicts();
-    return manhattan + 2 * linearConflicts;
+    
+    // Para 15-puzzle, adiciona penalizações extras para melhorar a heurística
+    int penalty = 0;
+    if (size == 4) {
+        // Pattern Database: penaliza padrões conhecidos difíceis
+        penalty += calculateCornerPenalty();
+        penalty += calculateEdgePenalty();
+        
+        // Walking Distance: aproximação da distância real
+        penalty += calculateWalkingDistance();
+    }
+    
+    return manhattan + 2 * linearConflicts + penalty;
+}
+
+// Penaliza tiles nos cantos que estão fora de posição
+int GraphNode::calculateCornerPenalty() const {
+    int penalty = 0;
+    vector<pair<int, int>> corners = {{0,0}, {0,3}, {3,0}, {3,3}};
+    
+    for (auto corner : corners) {
+        int i = corner.first, j = corner.second;
+        if (state[i][j] != 0) {
+            int value = state[i][j];
+            int targetRow = (value - 1) / size;
+            int targetCol = (value - 1) % size;
+            
+            // Se não está no canto correto, penaliza mais
+            if (abs(i - targetRow) + abs(j - targetCol) > 2) {
+                penalty += 2;
+            }
+        }
+    }
+    return penalty;
+}
+
+// Penaliza tiles nas bordas
+int GraphNode::calculateEdgePenalty() const {
+    int penalty = 0;
+    
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            if (state[i][j] != 0) {
+                int value = state[i][j];
+                int targetRow = (value - 1) / size;
+                int targetCol = (value - 1) % size;
+                
+                // Se está na borda mas deveria estar no centro (ou vice-versa)
+                bool currentBorder = (i == 0 || i == size-1 || j == 0 || j == size-1);
+                bool targetBorder = (targetRow == 0 || targetRow == size-1 || targetCol == 0 || targetCol == size-1);
+                
+                if (currentBorder != targetBorder) {
+                    penalty += 1;
+                }
+            }
+        }
+    }
+    return penalty;
+}
+
+// Aproximação da distância real considerando dependências
+int GraphNode::calculateWalkingDistance() const {
+    int distance = 0;
+    
+    // Conta quantos tiles precisam "andar" através de outros
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            if (state[i][j] != 0) {
+                int value = state[i][j];
+                int targetRow = (value - 1) / size;
+                int targetCol = (value - 1) % size;
+                
+                // Se precisa atravessar muitos tiles
+                int manhattanDist = abs(i - targetRow) + abs(j - targetCol);
+                if (manhattanDist > 3) {
+                    distance += manhattanDist / 4; // Penalidade proporcional
+                }
+            }
+        }
+    }
+    
+    return distance;
 }
 
 int GraphNode::calculateLinearConflicts() const {

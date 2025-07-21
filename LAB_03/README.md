@@ -1,20 +1,4 @@
-```
-LAB_03/
-├── src/
-│   ├── Puzzle.h          # Classe para representar o estado do puzzle
-│   ├── Puzzle.cpp        # Implementação da classe Puzzle
-│   ├── AStar.h           # Classe para o algoritmo A*
-│   ├── AStar.cpp         # Implementação do algoritmo A*
-│   ├── main.cpp          # Programa principal
-│   └── ins/              # Diretório de instâncias de teste
-│       ├── ins-8/        # Instâncias do 8-puzzle
-│       └── ins-15/       # Instâncias do 15-puzzle
-├── Makefile              # Arquivo de configuração para compilação
-├── build_and_test.sh     # Script para compilar e testar
-└── README.md            # Este arquivo
-```
-
--Puzzle e 15-Puzzle
+# Algo-Puzzle e 15-Puzzle
 
 Este projeto implementa o algoritmo A* para resolver os problemas 8-puzzle e 15-puzzle.
 

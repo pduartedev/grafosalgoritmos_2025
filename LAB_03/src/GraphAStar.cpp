@@ -50,7 +50,7 @@ vector<GraphNode> GraphAStar::solve(const GraphNode& initial) {
     cout << "Heurística avançada (Manhattan + Linear Conflicts): " << initialH << endl;
     cout << "Instância solucionável: " << (initial.isSolvable() ? "SIM" : "NÃO") << endl << endl;
     
-    const int MAX_STATES = 500000; // Limite aumentado para instâncias complexas
+    const int MAX_STATES = (initial.getSize() == 3) ? 500000 : 5000000; // 5M para 15-puzzle, 500k para 8-puzzle
     int progressCounter = 0;
     
     while (!openSet.empty() && statesEvaluated < MAX_STATES) {
@@ -201,12 +201,9 @@ int GraphAStar::calculateHeuristic(const GraphNode& node) {
 }
 
 void GraphAStar::printStatistics() const {
-    cerr << "=== Estatísticas da Busca A* no Grafo ===" << endl;
     cerr << "Tempo de execução: " << executionTime.count() << " segundos" << endl;
-    cerr << "Vértices avaliados: " << statesEvaluated << endl;
-    cerr << "Vértices enfileirados: " << statesEnqueued << endl;
-    cerr << "Vértices no grafo: " << graph.getNodeCount() << endl;
-    cerr << "Arestas no grafo: " << graph.getEdgeCount() << endl;
+    cerr << "Estados avaliados: " << statesEvaluated << endl;
+    cerr << "Estados enfileirados: " << statesEnqueued << endl;
 }
 
 // Versão silenciosa para processamento em lote
@@ -242,7 +239,8 @@ vector<GraphNode> GraphAStar::solveSilent(const GraphNode& initial) {
     allNodes[initial.getId()] = initialNode;
     statesEnqueued++;
     
-    const int MAX_STATES = 500000; // Limite de segurança
+    const int MAX_STATES = (initial.getSize() == 3) ? 500000 : 5000000; // 5M para 15-puzzle, 500k para 8-puzzle
+    const int size = initial.getSize(); // Tamanho do puzzle (3 para 8-puzzle, 4 para 15-puzzle)
     
     while (!openSet.empty() && statesEvaluated < MAX_STATES) {
         // Pega o nó com menor f-cost (vértice mais promissor)
@@ -284,6 +282,11 @@ vector<GraphNode> GraphAStar::solveSilent(const GraphNode& initial) {
             
             // Se não está na lista aberta ou encontrou caminho melhor
             if (inOpenSet.find(neighbor.getId()) == inOpenSet.end()) {
+                // Para 15-puzzle, verifica se já está em closedSet para economizar memória
+                if (size == 4 && closedSet.find(neighbor.getId()) != closedSet.end()) {
+                    continue;
+                }
+                
                 openSet.push(neighborNode);
                 inOpenSet.insert(neighbor.getId());
                 allNodes[neighbor.getId()] = neighborNode;

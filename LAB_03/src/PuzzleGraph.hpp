@@ -44,6 +44,9 @@ private:
     vector<vector<int>> getGoalState() const;
     int calculateLinearConflicts() const;
     int countConflictsInLine(const vector<int>& line, int index, bool isRow) const;
+    int calculateCornerPenalty() const;
+    int calculateEdgePenalty() const;
+    int calculateWalkingDistance() const;
 };
 
 // Hash para usar GraphNode em unordered containers

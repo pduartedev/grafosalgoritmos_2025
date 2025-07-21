@@ -67,7 +67,7 @@ void processBatchFile(const string& filename) {
     int solvedCount = 0;
     int unsolvableCount = 0;
     
-    cout << "=== PROCESSAMENTO EM LOTE DE INSTÂNCIAS 8-PUZZLE ===" << endl;
+    cout << "=== PROCESSAMENTO EM LOTE DE INSTÂNCIAS PUZZLE ===" << endl;
     cout << "Arquivo: " << filename << endl << endl;
     
     while (getline(file, line)) {
@@ -83,8 +83,8 @@ void processBatchFile(const string& filename) {
             input.push_back(number);
         }
         
-        if (input.size() != 9) {
-            cout << "Instância " << instanceCount << ": FORMATO INVÁLIDO (esperado 9 números)" << endl;
+        if (input.size() != 9 && input.size() != 16) {
+            cout << "Instância " << instanceCount << ": FORMATO INVÁLIDO (esperado 9 ou 16 números)" << endl;
             continue;
         }
         
@@ -162,27 +162,6 @@ void printSolution(const vector<GraphNode>& solution) {
     }
 }
 
-void printPuzzleAsGraph(const GraphNode& initial) {
-    cerr << "=== Modelagem do Problema como Grafo ===" << endl;
-    cerr << "• Cada VÉRTICE representa uma configuração do puzzle" << endl;
-    cerr << "• Cada ARESTA representa um movimento válido (custo = 1)" << endl;
-    cerr << "• O problema é encontrar o menor caminho no grafo de estados" << endl;
-    cerr << "• Algoritmo: A* com heurística de Manhattan" << endl;
-    cerr << "• Representação: Lista de Adjacências (gerada dinamicamente)" << endl;
-    cerr << endl;
-    
-    cerr << "Vértice inicial (configuração): " << endl;
-    // Temporariamente redireciona cout para cerr para imprimir o estado inicial
-    streambuf* orig = cout.rdbuf();
-    cout.rdbuf(cerr.rdbuf());
-    initial.print();
-    cout.rdbuf(orig);
-    
-    cerr << "ID do vértice: " << initial.getId() << endl;
-    cerr << "Heurística (distância ao objetivo): " << initial.calculateManhattanDistance() << endl;
-    cerr << endl;
-}
-
 int main(int argc, char* argv[]) {
     try {
         // Verifica se foi passado argumento de linha de comando
@@ -207,32 +186,14 @@ int main(int argc, char* argv[]) {
             // Cria o nó inicial do grafo
             GraphNode initialNode(input);
             
-            // Mostra como o problema é modelado como grafo
-            printPuzzleAsGraph(initialNode);
-            
             // Cria o solver A* orientado a grafos
             GraphAStar solver;
-            
-            // Para debug: mostra informações na saída de erro
-            cerr << "=== Iniciando busca A* no grafo de estados ===" << endl;
-            cerr << "Estado inicial (Vértice): " << initialNode.getId() << endl;
-            cerr << "Heurística inicial (Manhattan): " << initialNode.calculateManhattanDistance() << endl;
-            cerr << "Heurística avançada (Manhattan + Linear Conflicts): " << initialNode.calculateAdvancedHeuristic() << endl;
-            cerr << "Instância solucionável: " << (initialNode.isSolvable() ? "SIM" : "NÃO") << endl << endl;
             
             // Resolve o puzzle usando busca no grafo (modo silencioso)
             vector<GraphNode> solution = solver.solveSilent(initialNode);
             
-            // Imprime as estatísticas na saída de erro
+            // Imprime as estatísticas obrigatórias na saída de erro (conforme enunciado)
             solver.printStatistics();
-            
-            // Imprime informações do grafo construído na saída de erro  
-            cerr << endl;
-            cerr << "=== Informações do Grafo ===" << endl;
-            cerr << "Número de vértices (estados): " << solver.getGraph().getNodeCount() << endl;
-            cerr << "Número de arestas (transições): " << solver.getGraph().getEdgeCount() << endl;
-            cerr << "Representação: Lista de Adjacências" << endl;
-            cerr << endl;
             
             // Imprime APENAS a solução na saída padrão (conforme enunciado)
             printSolution(solution);
@@ -254,32 +215,14 @@ int main(int argc, char* argv[]) {
             // Cria o nó inicial do grafo
             GraphNode initialNode(input);
             
-            // Mostra como o problema é modelado como grafo
-            printPuzzleAsGraph(initialNode);
-            
             // Cria o solver A* orientado a grafos
             GraphAStar solver;
-            
-            // Para debug: mostra informações na saída de erro
-            cerr << "=== Iniciando busca A* no grafo de estados ===" << endl;
-            cerr << "Estado inicial (Vértice): " << initialNode.getId() << endl;
-            cerr << "Heurística inicial (Manhattan): " << initialNode.calculateManhattanDistance() << endl;
-            cerr << "Heurística avançada (Manhattan + Linear Conflicts): " << initialNode.calculateAdvancedHeuristic() << endl;
-            cerr << "Instância solucionável: " << (initialNode.isSolvable() ? "SIM" : "NÃO") << endl << endl;
             
             // Resolve o puzzle usando busca no grafo (modo silencioso)
             vector<GraphNode> solution = solver.solveSilent(initialNode);
             
-            // Imprime as estatísticas na saída de erro
+            // Imprime as estatísticas obrigatórias na saída de erro (conforme enunciado)
             solver.printStatistics();
-            
-            // Imprime informações do grafo construído na saída de erro  
-            cerr << endl;
-            cerr << "=== Informações do Grafo ===" << endl;
-            cerr << "Número de vértices (estados): " << solver.getGraph().getNodeCount() << endl;
-            cerr << "Número de arestas (transições): " << solver.getGraph().getEdgeCount() << endl;
-            cerr << "Representação: Lista de Adjacências" << endl;
-            cerr << endl;
             
             // Imprime APENAS a solução na saída padrão (conforme enunciado)
             printSolution(solution);
