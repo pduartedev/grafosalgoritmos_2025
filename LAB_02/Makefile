@@ -1,4 +1,4 @@
-# Makefile para o projeto LAB_01
+# Makefile para o projeto LAB_02
 
 # Compilador
 CC = g++
