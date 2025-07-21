@@ -18,6 +18,15 @@ vector<GraphNode> GraphAStar::solve(const GraphNode& initial) {
         return {initial};
     }
     
+    // Verifica se a instância é solucionável
+    if (!initial.isSolvable()) {
+        cout << "=== INSTÂNCIA INSOLÚVEL ===" << endl;
+        cout << "Esta configuração do puzzle não pode ser resolvida!" << endl;
+        auto endTime = chrono::high_resolution_clock::now();
+        executionTime = endTime - startTime;
+        return {};
+    }
+    
     // Priority queue para o algoritmo A* (min-heap baseado no f-cost)
     priority_queue<AStarNode, vector<AStarNode>, greater<AStarNode>> openSet;
     
@@ -37,9 +46,11 @@ vector<GraphNode> GraphAStar::solve(const GraphNode& initial) {
     
     cout << "=== Iniciando busca A* no grafo de estados ===" << endl;
     cout << "Estado inicial (Vértice): " << initial.getId() << endl;
-    cout << "Heurística inicial: " << initialH << endl << endl;
+    cout << "Heurística inicial (Manhattan): " << initial.calculateManhattanDistance() << endl;
+    cout << "Heurística avançada (Manhattan + Linear Conflicts): " << initialH << endl;
+    cout << "Instância solucionável: " << (initial.isSolvable() ? "SIM" : "NÃO") << endl << endl;
     
-    const int MAX_STATES = 100000; // Limite de segurança
+    const int MAX_STATES = 500000; // Limite aumentado para instâncias complexas
     int progressCounter = 0;
     
     while (!openSet.empty() && statesEvaluated < MAX_STATES) {
@@ -162,8 +173,31 @@ vector<GraphNode> GraphAStar::reconstructPath(const AStarNode& goalNode,
     return path;
 }
 
+// Versão silenciosa da reconstrução do caminho (para processamento em lote)
+vector<GraphNode> GraphAStar::reconstructPathSilent(const AStarNode& goalNode, 
+                                                   const unordered_map<string, AStarNode>& allNodes) {
+    vector<GraphNode> path;
+    string currentId = goalNode.graphNode.getId();
+    
+    // Reconstrói o caminho seguindo os parentIds
+    while (!currentId.empty()) {
+        auto it = allNodes.find(currentId);
+        if (it != allNodes.end()) {
+            path.push_back(it->second.graphNode);
+            currentId = it->second.parentId;
+        } else {
+            break;
+        }
+    }
+    
+    // Inverte para ter o caminho do início ao fim
+    reverse(path.begin(), path.end());
+    
+    return path;
+}
+
 int GraphAStar::calculateHeuristic(const GraphNode& node) {
-    return node.calculateManhattanDistance();
+    return node.calculateAdvancedHeuristic();
 }
 
 void GraphAStar::printStatistics() const {
@@ -173,4 +207,94 @@ void GraphAStar::printStatistics() const {
     cerr << "Vértices enfileirados: " << statesEnqueued << endl;
     cerr << "Vértices no grafo: " << graph.getNodeCount() << endl;
     cerr << "Arestas no grafo: " << graph.getEdgeCount() << endl;
+}
+
+// Versão silenciosa para processamento em lote
+vector<GraphNode> GraphAStar::solveSilent(const GraphNode& initial) {
+    auto startTime = chrono::high_resolution_clock::now();
+    
+    // Reset das estatísticas
+    statesEvaluated = 0;
+    statesEnqueued = 0;
+    graph = PuzzleGraph(); // Reset do grafo
+    
+    // Verifica se a instância é solucionável
+    if (!initial.isSolvable()) {
+        auto endTime = chrono::high_resolution_clock::now();
+        executionTime = endTime - startTime;
+        return {};
+    }
+    
+    // Priority queue para o algoritmo A* (min-heap baseado no f-cost)
+    priority_queue<AStarNode, vector<AStarNode>, greater<AStarNode>> openSet;
+    
+    // Conjuntos para controle de estados
+    unordered_set<string> closedSet;
+    unordered_set<string> inOpenSet;
+    unordered_map<string, AStarNode> allNodes; // Para reconstruir o caminho
+    
+    // Adiciona o estado inicial
+    int initialH = calculateHeuristic(initial);
+    AStarNode initialNode(initial, 0, initialH);
+    
+    openSet.push(initialNode);
+    inOpenSet.insert(initial.getId());
+    allNodes[initial.getId()] = initialNode;
+    statesEnqueued++;
+    
+    const int MAX_STATES = 500000; // Limite de segurança
+    
+    while (!openSet.empty() && statesEvaluated < MAX_STATES) {
+        // Pega o nó com menor f-cost (vértice mais promissor)
+        AStarNode current = openSet.top();
+        openSet.pop();
+        
+        // Remove do conjunto de estados abertos
+        inOpenSet.erase(current.graphNode.getId());
+        
+        // Adiciona ao conjunto de estados fechados (vértices visitados)
+        closedSet.insert(current.graphNode.getId());
+        statesEvaluated++;
+        
+        // Verifica se chegou ao objetivo
+        if (current.graphNode.isGoal()) {
+            auto endTime = chrono::high_resolution_clock::now();
+            executionTime = endTime - startTime;
+            return reconstructPathSilent(current, allNodes);
+        }
+        
+        // Gera vizinhos (arestas do grafo)
+        vector<pair<GraphNode, string>> neighbors = graph.generateNeighbors(current.graphNode);
+        
+        for (const auto& neighborPair : neighbors) {
+            const GraphNode& neighbor = neighborPair.first;
+            const string& move = neighborPair.second;
+            
+            // Ignora se já foi avaliado (vértice já visitado)
+            if (closedSet.find(neighbor.getId()) != closedSet.end()) {
+                continue;
+            }
+            
+            // Adiciona aresta ao grafo
+            graph.addEdge(current.graphNode, neighbor, move);
+            
+            int neighborG = current.gCost + 1;
+            int neighborH = calculateHeuristic(neighbor);
+            AStarNode neighborNode(neighbor, neighborG, neighborH, current.graphNode.getId(), move);
+            
+            // Se não está na lista aberta ou encontrou caminho melhor
+            if (inOpenSet.find(neighbor.getId()) == inOpenSet.end()) {
+                openSet.push(neighborNode);
+                inOpenSet.insert(neighbor.getId());
+                allNodes[neighbor.getId()] = neighborNode;
+                statesEnqueued++;
+            }
+        }
+    }
+    
+    auto endTime = chrono::high_resolution_clock::now();
+    executionTime = endTime - startTime;
+    
+    // Não encontrou solução
+    return {};
 }

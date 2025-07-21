@@ -1,11 +1,11 @@
 #pragma once
 
 #include "PuzzleGraph.hpp"
-#include <queue>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 #include <chrono>
+#include <queue>
 
 using namespace std;
 
@@ -50,6 +50,9 @@ public:
     // Método principal para resolver o puzzle usando A* no grafo
     vector<GraphNode> solve(const GraphNode& initial);
     
+    // Método silencioso para processamento em lote
+    vector<GraphNode> solveSilent(const GraphNode& initial);
+    
     // Getters para estatísticas
     int getStatesEvaluated() const { return statesEvaluated; }
     int getStatesEnqueued() const { return statesEnqueued; }
@@ -65,6 +68,10 @@ private:
     // Reconstroi o caminho da solução
     vector<GraphNode> reconstructPath(const AStarNode& goalNode, 
                                      const unordered_map<string, AStarNode>& allNodes);
+    
+    // Reconstroi o caminho da solução (versão silenciosa)
+    vector<GraphNode> reconstructPathSilent(const AStarNode& goalNode, 
+                                           const unordered_map<string, AStarNode>& allNodes);
     
     // Calcula a heurística para um nó
     int calculateHeuristic(const GraphNode& node);

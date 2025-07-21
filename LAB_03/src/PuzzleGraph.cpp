@@ -81,6 +81,47 @@ bool GraphNode::isGoal() const {
     return state == goal;
 }
 
+// Verifica se o puzzle é solucionável
+bool GraphNode::isSolvable() const {
+    vector<int> linearState;
+    int blankRow = -1;
+    
+    // Converte para array linear e encontra posição do espaço vazio
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            if (state[i][j] == 0) {
+                blankRow = i;
+            } else {
+                linearState.push_back(state[i][j]);
+            }
+        }
+    }
+    
+    // Conta inversões
+    int inversions = 0;
+    for (int i = 0; i < linearState.size(); i++) {
+        for (int j = i + 1; j < linearState.size(); j++) {
+            if (linearState[i] > linearState[j]) {
+                inversions++;
+            }
+        }
+    }
+    
+    if (size % 2 == 1) {
+        // Para puzzle de tamanho ímpar (3x3), número de inversões deve ser par
+        return inversions % 2 == 0;
+    } else {
+        // Para puzzle de tamanho par (4x4)
+        if ((size - blankRow) % 2 == 1) {
+            // Espaço vazio em linha ímpar (contando de baixo)
+            return inversions % 2 == 0;
+        } else {
+            // Espaço vazio em linha par (contando de baixo)
+            return inversions % 2 == 1;
+        }
+    }
+}
+
 int GraphNode::calculateManhattanDistance() const {
     int distance = 0;
     
@@ -101,6 +142,70 @@ int GraphNode::calculateManhattanDistance() const {
     }
     
     return distance;
+}
+
+// Heurística melhorada: Manhattan + Linear Conflicts
+int GraphNode::calculateAdvancedHeuristic() const {
+    int manhattan = calculateManhattanDistance();
+    int linearConflicts = calculateLinearConflicts();
+    return manhattan + 2 * linearConflicts;
+}
+
+int GraphNode::calculateLinearConflicts() const {
+    int conflicts = 0;
+    
+    // Conflitos nas linhas
+    for (int i = 0; i < size; i++) {
+        vector<int> row;
+        for (int j = 0; j < size; j++) {
+            if (state[i][j] != 0) {
+                int targetRow = (state[i][j] - 1) / size;
+                if (targetRow == i) {
+                    row.push_back(state[i][j]);
+                }
+            }
+        }
+        conflicts += countConflictsInLine(row, i, true);
+    }
+    
+    // Conflitos nas colunas
+    for (int j = 0; j < size; j++) {
+        vector<int> col;
+        for (int i = 0; i < size; i++) {
+            if (state[i][j] != 0) {
+                int targetCol = (state[i][j] - 1) % size;
+                if (targetCol == j) {
+                    col.push_back(state[i][j]);
+                }
+            }
+        }
+        conflicts += countConflictsInLine(col, j, false);
+    }
+    
+    return conflicts;
+}
+
+int GraphNode::countConflictsInLine(const vector<int>& line, int index, bool isRow) const {
+    int conflicts = 0;
+    
+    for (int i = 0; i < line.size(); i++) {
+        for (int j = i + 1; j < line.size(); j++) {
+            int pos1, pos2;
+            if (isRow) {
+                pos1 = (line[i] - 1) % size;
+                pos2 = (line[j] - 1) % size;
+            } else {
+                pos1 = (line[i] - 1) / size;
+                pos2 = (line[j] - 1) / size;
+            }
+            
+            if (pos1 > pos2) {
+                conflicts++;
+            }
+        }
+    }
+    
+    return conflicts;
 }
 
 string GraphNode::toString() const {

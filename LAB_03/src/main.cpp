@@ -4,6 +4,8 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
+#include <streambuf>
 
 using namespace std;
 
@@ -48,6 +50,99 @@ vector<int> readInputFromFile(const string& filename) {
     return input;
 }
 
+// Nova função para processar múltiplas instâncias
+void processBatchFile(const string& filename) {
+    ifstream file(filename);
+    
+    if (!file.is_open()) {
+        cerr << "Erro: Não foi possível abrir o arquivo " << filename << endl;
+        return;
+    }
+    
+    string line;
+    int instanceCount = 0;
+    double totalTime = 0.0;
+    int totalStatesEvaluated = 0;
+    int totalStatesEnqueued = 0;
+    int solvedCount = 0;
+    int unsolvableCount = 0;
+    
+    cout << "=== PROCESSAMENTO EM LOTE DE INSTÂNCIAS 8-PUZZLE ===" << endl;
+    cout << "Arquivo: " << filename << endl << endl;
+    
+    while (getline(file, line)) {
+        if (line.empty()) continue;
+        
+        instanceCount++;
+        vector<int> input;
+        istringstream iss(line);
+        int number;
+        
+        // Lê números da linha
+        while (iss >> number) {
+            input.push_back(number);
+        }
+        
+        if (input.size() != 9) {
+            cout << "Instância " << instanceCount << ": FORMATO INVÁLIDO (esperado 9 números)" << endl;
+            continue;
+        }
+        
+        try {
+            // Cria o puzzle inicial
+            GraphNode initialPuzzle(input);
+            
+            // Verifica solvabilidade
+            if (!initialPuzzle.isSolvable()) {
+                cout << "Instância " << instanceCount << ": INSOLÚVEL" << endl;
+                unsolvableCount++;
+                continue;
+            }
+            
+            // Cria o solver A*
+            GraphAStar solver;
+            
+            // Resolve o puzzle (modo silencioso para lote)
+            vector<GraphNode> solution = solver.solveSilent(initialPuzzle);
+            
+            if (!solution.empty()) {
+                cout << "Instância " << instanceCount << ": RESOLVIDA em " 
+                     << (solution.size() - 1) << " passos | "
+                     << "Tempo: " << fixed << setprecision(6) << solver.getExecutionTime() << "s | "
+                     << "Vértices: " << solver.getStatesEvaluated() << " | "
+                     << "Enfileirados: " << solver.getStatesEnqueued() << endl;
+                
+                totalTime += solver.getExecutionTime();
+                totalStatesEvaluated += solver.getStatesEvaluated();
+                totalStatesEnqueued += solver.getStatesEnqueued();
+                solvedCount++;
+            } else {
+                cout << "Instância " << instanceCount << ": FALHA NA RESOLUÇÃO" << endl;
+            }
+            
+        } catch (const exception& e) {
+            cout << "Instância " << instanceCount << ": ERRO - " << e.what() << endl;
+        }
+    }
+    
+    file.close();
+    
+    // Estatísticas finais
+    cout << endl << "=== ESTATÍSTICAS FINAIS ===" << endl;
+    cout << "Total de instâncias processadas: " << instanceCount << endl;
+    cout << "Instâncias resolvidas: " << solvedCount << endl;
+    cout << "Instâncias insolúveis: " << unsolvableCount << endl;
+    cout << "Taxa de sucesso: " << fixed << setprecision(1) 
+         << (instanceCount > 0 ? (double)solvedCount / instanceCount * 100 : 0) << "%" << endl;
+    
+    if (solvedCount > 0) {
+        cout << "Tempo médio por instância: " << fixed << setprecision(6)
+             << totalTime / solvedCount << "s" << endl;
+        cout << "Vértices médios avaliados: " << totalStatesEvaluated / solvedCount << endl;
+        cout << "Vértices médios enfileirados: " << totalStatesEnqueued / solvedCount << endl;
+    }
+}
+
 void printSolution(const vector<GraphNode>& solution) {
     if (solution.empty()) {
         cout << "Não foi possível encontrar uma solução." << endl;
@@ -68,63 +163,130 @@ void printSolution(const vector<GraphNode>& solution) {
 }
 
 void printPuzzleAsGraph(const GraphNode& initial) {
-    cout << "=== Modelagem do Problema como Grafo ===" << endl;
-    cout << "• Cada VÉRTICE representa uma configuração do puzzle" << endl;
-    cout << "• Cada ARESTA representa um movimento válido (custo = 1)" << endl;
-    cout << "• O problema é encontrar o menor caminho no grafo de estados" << endl;
-    cout << "• Algoritmo: A* com heurística de Manhattan" << endl;
-    cout << "• Representação: Lista de Adjacências (gerada dinamicamente)" << endl;
-    cout << endl;
+    cerr << "=== Modelagem do Problema como Grafo ===" << endl;
+    cerr << "• Cada VÉRTICE representa uma configuração do puzzle" << endl;
+    cerr << "• Cada ARESTA representa um movimento válido (custo = 1)" << endl;
+    cerr << "• O problema é encontrar o menor caminho no grafo de estados" << endl;
+    cerr << "• Algoritmo: A* com heurística de Manhattan" << endl;
+    cerr << "• Representação: Lista de Adjacências (gerada dinamicamente)" << endl;
+    cerr << endl;
     
-    cout << "Vértice inicial (configuração): " << endl;
+    cerr << "Vértice inicial (configuração): " << endl;
+    // Temporariamente redireciona cout para cerr para imprimir o estado inicial
+    streambuf* orig = cout.rdbuf();
+    cout.rdbuf(cerr.rdbuf());
     initial.print();
-    cout << "ID do vértice: " << initial.getId() << endl;
-    cout << "Heurística (distância ao objetivo): " << initial.calculateManhattanDistance() << endl;
-    cout << endl;
+    cout.rdbuf(orig);
+    
+    cerr << "ID do vértice: " << initial.getId() << endl;
+    cerr << "Heurística (distância ao objetivo): " << initial.calculateManhattanDistance() << endl;
+    cerr << endl;
 }
 
 int main(int argc, char* argv[]) {
     try {
-        vector<int> input;
-        
-        // Verifica se foi passado um arquivo como argumento
+        // Verifica se foi passado argumento de linha de comando
         if (argc > 1) {
-            input = readInputFromFile(argv[1]);
+            string filename = argv[1];
+            
+            // Verifica se é o modo em lote (arquivo com múltiplas instâncias)
+            if (argc > 2 && string(argv[2]) == "--batch") {
+                processBatchFile(filename);
+                return 0;
+            }
+            
+            // Modo single - processa apenas uma instância do arquivo
+            vector<int> input = readInputFromFile(filename);
+            
+            // Verifica se a entrada é válida
+            if (input.size() != 9 && input.size() != 16) {
+                cerr << "Erro: Entrada deve conter 9 números (8-puzzle) ou 16 números (15-puzzle)" << endl;
+                return 1;
+            }
+            
+            // Cria o nó inicial do grafo
+            GraphNode initialNode(input);
+            
+            // Mostra como o problema é modelado como grafo
+            printPuzzleAsGraph(initialNode);
+            
+            // Cria o solver A* orientado a grafos
+            GraphAStar solver;
+            
+            // Para debug: mostra informações na saída de erro
+            cerr << "=== Iniciando busca A* no grafo de estados ===" << endl;
+            cerr << "Estado inicial (Vértice): " << initialNode.getId() << endl;
+            cerr << "Heurística inicial (Manhattan): " << initialNode.calculateManhattanDistance() << endl;
+            cerr << "Heurística avançada (Manhattan + Linear Conflicts): " << initialNode.calculateAdvancedHeuristic() << endl;
+            cerr << "Instância solucionável: " << (initialNode.isSolvable() ? "SIM" : "NÃO") << endl << endl;
+            
+            // Resolve o puzzle usando busca no grafo (modo silencioso)
+            vector<GraphNode> solution = solver.solveSilent(initialNode);
+            
+            // Imprime as estatísticas na saída de erro
+            solver.printStatistics();
+            
+            // Imprime informações do grafo construído na saída de erro  
+            cerr << endl;
+            cerr << "=== Informações do Grafo ===" << endl;
+            cerr << "Número de vértices (estados): " << solver.getGraph().getNodeCount() << endl;
+            cerr << "Número de arestas (transições): " << solver.getGraph().getEdgeCount() << endl;
+            cerr << "Representação: Lista de Adjacências" << endl;
+            cerr << endl;
+            
+            // Imprime APENAS a solução na saída padrão (conforme enunciado)
+            printSolution(solution);
+            
+            if (solution.empty()) {
+                return 1; // Indica que não foi encontrada solução
+            }
+            
         } else {
-            input = readInput();
-        }
-        
-        // Verifica se a entrada é válida
-        if (input.size() != 9 && input.size() != 16) {
-            cerr << "Erro: Entrada deve conter 9 números (8-puzzle) ou 16 números (15-puzzle)" << endl;
-            return 1;
-        }
-        
-        // Cria o nó inicial do grafo
-        GraphNode initialNode(input);
-        
-        // Mostra como o problema é modelado como grafo
-        printPuzzleAsGraph(initialNode);
-        
-        // Cria o solver A* orientado a grafos
-        GraphAStar solver;
-        
-        // Resolve o puzzle usando busca no grafo
-        vector<GraphNode> solution = solver.solve(initialNode);
-        
-        // Imprime as estatísticas na saída de erro
-        solver.printStatistics();
-        
-        // Imprime informações do grafo construído
-        cout << endl;
-        solver.getGraph().printGraphInfo();
-        cout << endl;
-        
-        // Imprime a solução na saída padrão
-        printSolution(solution);
-        
-        if (solution.empty()) {
-            return 1; // Indica que não foi encontrada solução
+            // Modo stdin - lê da entrada padrão
+            vector<int> input = readInput();
+            
+            // Verifica se a entrada é válida
+            if (input.size() != 9 && input.size() != 16) {
+                cerr << "Erro: Entrada deve conter 9 números (8-puzzle) ou 16 números (15-puzzle)" << endl;
+                return 1;
+            }
+            
+            // Cria o nó inicial do grafo
+            GraphNode initialNode(input);
+            
+            // Mostra como o problema é modelado como grafo
+            printPuzzleAsGraph(initialNode);
+            
+            // Cria o solver A* orientado a grafos
+            GraphAStar solver;
+            
+            // Para debug: mostra informações na saída de erro
+            cerr << "=== Iniciando busca A* no grafo de estados ===" << endl;
+            cerr << "Estado inicial (Vértice): " << initialNode.getId() << endl;
+            cerr << "Heurística inicial (Manhattan): " << initialNode.calculateManhattanDistance() << endl;
+            cerr << "Heurística avançada (Manhattan + Linear Conflicts): " << initialNode.calculateAdvancedHeuristic() << endl;
+            cerr << "Instância solucionável: " << (initialNode.isSolvable() ? "SIM" : "NÃO") << endl << endl;
+            
+            // Resolve o puzzle usando busca no grafo (modo silencioso)
+            vector<GraphNode> solution = solver.solveSilent(initialNode);
+            
+            // Imprime as estatísticas na saída de erro
+            solver.printStatistics();
+            
+            // Imprime informações do grafo construído na saída de erro  
+            cerr << endl;
+            cerr << "=== Informações do Grafo ===" << endl;
+            cerr << "Número de vértices (estados): " << solver.getGraph().getNodeCount() << endl;
+            cerr << "Número de arestas (transições): " << solver.getGraph().getEdgeCount() << endl;
+            cerr << "Representação: Lista de Adjacências" << endl;
+            cerr << endl;
+            
+            // Imprime APENAS a solução na saída padrão (conforme enunciado)
+            printSolution(solution);
+            
+            if (solution.empty()) {
+                return 1; // Indica que não foi encontrada solução
+            }
         }
         
     } catch (const exception& e) {

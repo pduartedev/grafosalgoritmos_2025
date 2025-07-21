@@ -1,4 +1,4 @@
-# Algo```
+```
 LAB_03/
 ├── src/
 │   ├── Puzzle.h          # Classe para representar o estado do puzzle
@@ -12,7 +12,9 @@ LAB_03/
 ├── Makefile              # Arquivo de configuração para compilação
 ├── build_and_test.sh     # Script para compilar e testar
 └── README.md            # Este arquivo
-```-Puzzle e 15-Puzzle
+```
+
+-Puzzle e 15-Puzzle
 
 Este projeto implementa o algoritmo A* para resolver os problemas 8-puzzle e 15-puzzle.
 

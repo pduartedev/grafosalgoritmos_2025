@@ -28,7 +28,9 @@ public:
     
     // Métodos principais
     bool isGoal() const;
+    bool isSolvable() const;
     int calculateManhattanDistance() const;
+    int calculateAdvancedHeuristic() const;
     void print() const;
     string toString() const;
     
@@ -40,6 +42,8 @@ private:
     void findEmptyPosition();
     void generateId();
     vector<vector<int>> getGoalState() const;
+    int calculateLinearConflicts() const;
+    int countConflictsInLine(const vector<int>& line, int index, bool isRow) const;
 };
 
 // Hash para usar GraphNode em unordered containers

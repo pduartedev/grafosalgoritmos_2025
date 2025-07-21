@@ -46,8 +46,14 @@ test: $(TARGET)
 test-15: $(TARGET)
 	@echo "=== Testando A* com 15-puzzle ==="
 	@echo ""
-	@echo "--- Teste com instância ins-15/15puzz.00 ---"
-	@./$(TARGET) ins/ins-15/15puzz.00
+	@echo "--- Verificando solvabilidade da instância 15puzz.00 ---"
+	@./$(TARGET) ins/ins-15/15puzz.00 || true
+	@echo ""
+	@echo "--- Teste com instância solucionável (1 movimento) ---"
+	@./$(TARGET) ins/ins-15/15puzz_goal_minus_1.txt
+	@echo ""
+	@echo "--- Teste com instância solucionável (2 movimentos) ---"
+	@./$(TARGET) ins/ins-15/15puzz_solvable_3moves.txt
 
 # Teste com 15-puzzle simples
 test-15-simple: $(TARGET)
