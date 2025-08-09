@@ -1,0 +1,31 @@
+import random
+N=100
+M=800
+cmin=10
+cmax=100
+kmin=30
+kmax=500
+print (N,M)
+arestas=0
+for v in range((9*N)//10):
+    for i in range(2):
+        w = random.randint(v+1,N-1)
+        c = random.randint(cmin,cmax)
+        k = random.randint(kmin,kmax)
+        print(v,w,c,k);
+        arestas += 1
+for w in range(N//10, N):
+    for i in range(2):
+        v = random.randint(0,w-1)
+        c = random.randint(cmin,cmax)
+        k = random.randint(kmin,kmax)
+        print(v,w,c,k);
+        arestas += 1
+while(arestas < M):
+    v = random.randint(0,N-1)
+    w = random.randint(0,N-1)
+    if (v != w):
+        c = random.randint(cmin,cmax)
+        k = random.randint(kmin,kmax)
+        print(v,w,c,k)
+        arestas += 1

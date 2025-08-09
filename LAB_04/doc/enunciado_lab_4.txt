@@ -1,0 +1,32 @@
+Implemente um algoritmo que, dados um grafo orientado D=(V,A),
+uma função capacidade c:A->N, uma função custo k:A->N, e
+vértices s e t de V, encontre um fluxo máximo de s para t em D,
+sujeito a f<=c que tenha custo k mínimo. Lembrando que um s,t-fluxo
+f é tal que a soma dos valores de f das arestas de entrada em v
+é igual à soman dos valores de f das arestas de saída de v, para
+todo v exceto s e t. O custo de um fluxo f é o somatório de k(a)*f(a)
+para todos os arcos a. Em seguida identifique um s,t-corte mínimo de D.
+
+A entrada para o seu programa inicia com inteiro N e M na primeira
+linha, tal que N<=1000, M<=50000, indicando que |V|=N e |A|=M.
+Os vértices de D são numerados a partir de 0, portanto de 0 a N-1.
+Em seguida, são dadas M linhas contendo 4 inteiros cada, x y c k,
+indicando que existe um arco de x para y com capacidade c e custo k.
+A capacidade c será no máximo 1000. O custo k será no máximo 1000.
+O vértice s é sempre o vértice 0 (zero) e o vértice t é sempre o
+vértice N-1. As arestas serão dadas em ordem crescente de origem
+e em caso de empate em ordem crescente de destino.
+
+A saída deve imprimir na primeira linha o valor total de um fluxo
+máximo de (D,c,s,t). A segunda linha deve conter um inteiro indicando
+o custo total de um tal fluxo máximo que tenha o menor custo possível.
+A terceira linha deve imprimir uma praia contendo
+s=0 de um s,t-corte mínimo de D no seguinte formato. A linha começa
+com um inteiro T indicando o número de vértices na praia do corte mínimo
+em seguida T é seguido por 4 espaços brancos e em seguida os T inteiros
+descrevendo os vértices da praia de um s,t-corte mínimo são listados
+em ordem crescente separados por um espaço em branco.
+
+Em seguida, seu programa deve reimprimir todas as arestas dadas
+na entrada com capacidade e custo  na mesma ordem, seguindo cada aresta por um espaço
+uma seta (traço e maior ->) um espaço e o valor de f nesta aresta.
