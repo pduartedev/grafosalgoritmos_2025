@@ -1,4 +1,4 @@
-# Algo-Puzzle e 15-Puzzle
+# 8 e 15-Puzzle
 
 Este projeto implementa o algoritmo A* para resolver os problemas 8-puzzle e 15-puzzle.
 
